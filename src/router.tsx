@@ -4,6 +4,7 @@ import DashboardPage from "./pages/DashboardPage";
 import LunchPage from "./pages/LunchPage";
 import OrderPage from "./pages/OrderPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
+import ManagementPage from "./pages/ManagementPage";
 
 
 export default function AppRouter() {
@@ -14,6 +15,7 @@ export default function AppRouter() {
           <Route path='/' element={<DashboardPage />} />
           <Route path='/lunch' element={<LunchPage />} />
           <Route path='/orders' element={<OrderPage />} />
+          <Route path='/management' element={<ManagementPage />} />
           <Route path='/analytics' element={<AnalyticsPage />} />
         </Route>
       </Routes>

@@ -3,6 +3,8 @@ import { MdSpaceDashboard } from "react-icons/md";
 import { GiHotMeal } from "react-icons/gi";
 import { TbInvoice } from "react-icons/tb";
 import { AnalyticsIcon } from "../icons-components/AnalyticsIcon";
+import { FaPiggyBank } from "react-icons/fa6";
+
 
 export default function SideBar() {
   const activeWrapper = "border-1 border-transparent px-4 py-2 rounded-md flex items-center bg-teal-950 text-teal-100";
@@ -61,6 +63,21 @@ export default function SideBar() {
               <>
                 <TbInvoice size={24} className={isActive ? "icon-orders text-current" : "text-current"} />
                 <h1 className="pl-2">Pedidos</h1>
+              </>
+            )}
+          </NavLink>
+
+          {/* Link a Gestion de dinero */}
+          <NavLink
+            to="/management"
+            className={({ isActive }) => 
+              isActive ? activeWrapper : inactiveWrapper
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <FaPiggyBank size={24} className={isActive ? "icon-dashboard text-current" : "text-current" } />
+                <h1 className="pl-2">Gestión</h1>
               </>
             )}
           </NavLink>
