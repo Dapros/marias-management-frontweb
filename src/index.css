@@ -1,0 +1,113 @@
+@font-face {
+  font-family: Poppins;
+  src: url("../src/assets/fonts/Poppins-Regular.ttf");
+}
+
+@import "tailwindcss";
+
+@theme {
+  --font-poppins: Poppins, "sans-serif";
+}
+
+/* Animaciones de iconos de slider menu*/
+.icon-dashboard {
+  display: inline-block;
+  transform-origin: center;
+  animation: dashScale 900ms ease-in-out infinite alternate;
+}
+@keyframes dashScale {
+  from { transform: scale(0.92); }
+  to { transform: scale(1.04); }
+}
+
+.icon-lunch {
+  display: inline-block;
+  transform-origin: center;
+  animation: lunchShake 700ms cubic-bezier(.25,.8,.25,1) infinite;
+}
+@keyframes lunchShake {
+  0% { transform: translateX(0); }
+  30%  { transform: translateX(3px); }
+  60%  { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+/* Icono de pedidos */
+.icon-orders {
+  display: inline-block;
+  transform-origin: center;
+  animation: ordersJitter 900ms ease-in-out infinite;
+}
+@keyframes ordersJitter {
+  0%   { transform: translate(0,0) rotate(0deg); }
+  20%  { transform: translate(1px,0px) rotate(0.8deg); }
+  40%  { transform: translate(0px,-1px) rotate(0.5deg); }
+  60%  { transform: translate(1px,1px) rotate(-0.6deg); }
+  80%  { transform: translate(0px,0px) rotate(-0.2deg); }
+  100% { transform: translate(0,0) rotate(0deg); }
+}
+
+/* Analityc icons - 3 barras */
+.analytics-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  height: 15px;
+  box-sizing: content-box;
+  color: inherit;
+}
+
+/* inner wrapper para alinear las barras abajo dentro del área centrada */
+.analytics-icon .bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 15px;
+}
+
+/* barras base */
+.analytics-icon .bar {
+  width: 5px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: height 220ms ease;
+}
+
+/* estado no activo - estático, de menor a mayor */
+.analytics-icon .bar-1 { height: 6px; }
+.analytics-icon .bar-2 { height: 10px; }
+.analytics-icon .bar-3 { height: 14px; }
+
+/* cuando está activo - animaciones de altura */
+.analytics-active .bar-1 {
+  animation: bar1Anim 900ms ease-in-out infinite alternate;
+}
+.analytics-active .bar-2 {
+  animation: bar2Anim 950ms ease-in-out infinite alternate;
+  animation-delay: 90ms;
+}
+.analytics-active .bar-3 {
+  animation: bar3Anim 1100ms ease-in-out infinite alternate;
+  animation-delay: 180ms;
+}
+
+/* animaciones de altura */
+@keyframes bar1Anim {
+  from { height: 4px; }
+  to { height: 15px; }
+}
+@keyframes bar2Anim {
+  from { height: 6px; }
+  to { height: 15px; }
+}
+@keyframes bar3Anim {
+  from { height: 8px; }
+  to { height: 15px; }
+}
+
+svg[class*="icon-"] {
+  will-change: transform;
+  backface-visibility: hidden;
+}
