@@ -2,6 +2,7 @@ import { useState } from "react";
 import LunchForm from "../components/forms/LunchForm";
 import { FaPlus } from "react-icons/fa6";
 import ViewForm from "../components/custom/ViewForm";
+import { useLunchStore } from "../store/useLunchStore";
 
 
 export default function LunchPage() {
@@ -14,8 +15,10 @@ export default function LunchPage() {
     console.log("Formulario")
   }
 
+  const { lunches } = useLunchStore()
+
   return (
-    <div className="m-6 w-full font-poppins">
+    <div className="m-0 md:m-6 w-full min-h-full font-poppins overflow-x-hidden">
       {/* Encabezado de la página con titulo y texto */}
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold text-teal-600">Almuerzos</h1>
@@ -35,7 +38,7 @@ export default function LunchPage() {
           <p className="font-bold">Registrar nuevo almuerzo</p>
         </button>
         {showLunchForm && (
-          <div className="mt-4 grid grid-cols-2 overflow-hidden rounded-lg shadow-lg">
+          <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-lg shadow-lg bg-white">
             {/* Formulario para crear un nuevo almuerzo */}
             <LunchForm />
             {/* Vista previa de como esta quedando el almuerzo */}

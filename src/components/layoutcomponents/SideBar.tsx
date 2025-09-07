@@ -11,7 +11,7 @@ export default function SideBar() {
   const inactiveWrapper = "border-1 border-transparent hover:border-white p-2 rounded-md flex items-center";
 
   return (
-    <div className="w-64 min-h-screen bg-[#111] p-2 font-poppins flex flex-col">
+    <div className="min-h-screen bg-[#111] p-2 font-poppins flex flex-col">
       {/* Header del slider menu */}
       <div className="flex items-center gap-2 py-4">
         <h1 className="font-bold text-white">Marias Management</h1>
