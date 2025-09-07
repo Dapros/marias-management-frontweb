@@ -20,7 +20,7 @@ export default function SideBar() {
       {/* Links de navegacion y Footer */}
       <div className="flex flex-col flex-1 justify-between">
         {/* Links de navegacion */}
-        <div className="flex flex-col text-white mt-5 gap-2">
+        <div className="flex flex-col text-white mt-5 gap-3">
           {/* Link a Dashboard */}
           <NavLink
             to="/"
