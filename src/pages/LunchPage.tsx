@@ -15,7 +15,7 @@ export default function LunchPage() {
   }
 
   return (
-    <div className="m-6 font-poppins">
+    <div className="m-6 w-full font-poppins">
       {/* Encabezado de la página con titulo y texto */}
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold text-teal-600">Almuerzos</h1>

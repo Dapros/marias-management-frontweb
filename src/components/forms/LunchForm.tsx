@@ -14,11 +14,12 @@ export default function LunchForm() {
       </div>
 
       <div className="px-2">
-        <label>Titulo para el almuerzo</label>
+        <label htmlFor="lunchTitle">Titulo para el almuerzo</label>
         <input 
           type="text"
           placeholder="Ej: Almuerzo Ejecutivo, Carne asada, Pechuga, etc.."
           className="border-b w-full"
+          name="lunchTitle"
         />
       </div>
     </form>
