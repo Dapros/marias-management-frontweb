@@ -13,6 +13,7 @@ export type LunchStoreState = {
   setDraftImagen: (imagen: LunchType["imagen"]) => void;
   setDraftPrice: (price: LunchType["price"]) => void;
   setDraftTags: (tags: LunchType["tags"]) => void;
+  resetDraftImagen: () => void;
   resetDraft: () => void;
   addLunchFromDraft: () => void;
 }
@@ -33,6 +34,7 @@ export const useLunchStore = create<LunchStoreState>((set, get) => ({
   setDraftPrice: (price) => set((state) => ({ draft: { ...state.draft, price } })),
   setDraftTags: (tags) => set((state) => ({ draft: { ...state.draft, tags } })),
 
+  resetDraftImagen: () => set((state) => ({ draft: { ...state.draft, imagen: "" } })),
   resetDraft: () => set(() => ({ draft: initialDraft })),
 
   addLunchFromDraft: () => {
