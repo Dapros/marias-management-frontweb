@@ -14,6 +14,7 @@ export default function LunchForm() {
     setDraftImagen,
     setDraftPrice,
     setDraftTags,
+    toggleLunchForm,
     addLunchFromDraft,
     resetDraftImagen,
   } = useLunchStore()
@@ -63,11 +64,7 @@ export default function LunchForm() {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     addLunchFromDraft()
-  }
-
-  // manejador de click del botón de guardar
-  const handleSaveClick = () => {
-    addLunchFromDraft()
+    toggleLunchForm()
   }
 
   return (
@@ -161,8 +158,7 @@ export default function LunchForm() {
 
         <div>
           <button
-            type="button"
-            onClick={handleSaveClick}
+            type="submit"
             className="py-2 px-4 rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition-normal ease-in-out duration-300 disabled:opacity-50"
             disabled={!draft.title || draft.price <= 0}
           >

@@ -10,11 +10,10 @@ import LunchCard from "../components/cards/LunchCard";
 export default function LunchPage() {
 
   // state local para mostrar el formulario si se crea un nuevo almuerzo
-  const [showLunchForm, setShowLunchForm] = useState(false)
-  const { lunches, resetDraft } = useLunchStore()
+  const { lunches, showLunchForm, toggleLunchForm, resetDraft } = useLunchStore()
 
   const handleShowLunchForm = () => {
-    setShowLunchForm(!showLunchForm)
+    toggleLunchForm()
     if(showLunchForm === false) {
       resetDraft()
     }

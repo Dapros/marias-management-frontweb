@@ -5,6 +5,9 @@ export type LunchStoreState = {
   // Lista global de almuerzos
   lunches: LunchType[];
 
+  // estado boolean para controlar si se muestra el formulario
+  showLunchForm: boolean;
+
   // Borrador del formulario para vista previa
   draft: Omit<LunchType, "id"> & { id?: string };
 
@@ -15,6 +18,7 @@ export type LunchStoreState = {
   setDraftTags: (tags: LunchType["tags"]) => void;
   resetDraftImagen: () => void;
   resetDraft: () => void;
+  toggleLunchForm: () => void;
   addLunchFromDraft: () => void;
 }
 
@@ -27,6 +31,7 @@ const initialDraft: LunchStoreState["draft"] = {
 
 export const useLunchStore = create<LunchStoreState>((set, get) => ({
   lunches: [],
+  showLunchForm: false,
   draft: initialDraft,
 
   setDraftTitle: (title) => set((state) => ({ draft: { ...state.draft, title } })),
@@ -36,6 +41,8 @@ export const useLunchStore = create<LunchStoreState>((set, get) => ({
 
   resetDraftImagen: () => set((state) => ({ draft: { ...state.draft, imagen: "" } })),
   resetDraft: () => set(() => ({ draft: initialDraft })),
+
+  toggleLunchForm: () => set((state) => ({ showLunchForm: !state.showLunchForm })),
 
   addLunchFromDraft: () => {
     const { draft, lunches } = get()
