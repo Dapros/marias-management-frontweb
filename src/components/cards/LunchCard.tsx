@@ -1,27 +1,45 @@
+import { useLunchStore } from "../../store/useLunchStore";
 import { formatCurrencyCOP } from "../../utils/format/curremcy";
 
 type LunchCardProps = {
-  key: string;
+  id: string;
   title: string;
   imagen?: string;
   price: number;
   tags?: string[]
 }
 
-export default function LunchCard({ key, title, imagen, price, tags }: LunchCardProps) {
+export default function LunchCard({ id, title, imagen, price, tags }: LunchCardProps) {
+  
+  const { toggleLunchForm, loadLunchToDraft } = useLunchStore()
+
+  // al hacer doble click se abre el formulario y el draft se carga con los datos del almuerzo seleccionado
+  const handleDoubleClick = () => {
+    const lunchData = {
+      id,
+      title,
+      imagen: imagen || "",
+      price,
+      tags: tags || []
+    }
+    loadLunchToDraft(lunchData)
+    toggleLunchForm()
+  }
+
   return (
-    <div 
-      id={key}
+    <button
+      id={id}
+      onDoubleClick={handleDoubleClick}
       className="w-fit h-fit shadow-md border border-gray-200 hover:border-teal-100 hover:bg-teal-50 rounded-lg p-2"
     >
-      <div className="rounded-lg overflow-hidden w-fit bg-transparent">
+      <div className="relative rounded-lg overflow-hidden w-fit flex items-center">
         <img 
           src={imagen ? imagen : "../../../public/logo/mariasMLogo.png"}
           alt={title}
-          className={` ${imagen ? 'object-cover' : 'opacity-10'}`}
+          className={`transform transition-transform duration-300 hover:scale-125 ${imagen ? 'object-cover' : 'opacity-10'}`}
         />
       </div>
-      <div className="flex flex-col mt-2">
+      <div className="flex flex-col items-start px-1 pb-1 mt-2">
         <h2 className="font-bold text-lg">{title}</h2>
         <p className="font-bold text-xl text-teal-600 my-1">{formatCurrencyCOP.format(price)} COP</p>
         <p className="text-sm font-semibold text-gray-600 mb-2">Detalles:</p>
@@ -37,6 +55,6 @@ export default function LunchCard({ key, title, imagen, price, tags }: LunchCard
           <p className="text-xs mt-2 text-gray-500">Este almuerzo no tiene detalles/tags</p>
         )}
       </div>
-    </div>
+    </button>
   )
 }

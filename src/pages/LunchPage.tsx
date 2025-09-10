@@ -1,4 +1,3 @@
-import { useState } from "react";
 import LunchForm from "../components/forms/LunchForm";
 import { FaPlus } from "react-icons/fa6";
 import ViewForm from "../components/custom/ViewForm";
@@ -10,12 +9,13 @@ import LunchCard from "../components/cards/LunchCard";
 export default function LunchPage() {
 
   // state local para mostrar el formulario si se crea un nuevo almuerzo
-  const { lunches, showLunchForm, toggleLunchForm, resetDraft } = useLunchStore()
+  const { lunches, showLunchForm, toggleLunchForm, resetDraft, setEditingMode } = useLunchStore()
 
   const handleShowLunchForm = () => {
     toggleLunchForm()
     if(showLunchForm === false) {
       resetDraft()
+      setEditingMode(false)
     }
     console.log("Formulario")
   }
@@ -55,15 +55,17 @@ export default function LunchPage() {
           {lunches.length === 0 ? (
             <p className="text-gray-500 text-center">No hay almuerzos registrados aun.</p>
           ): (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="columns-1 md:columns-2 lg:columns-4 gap-4">
               {lunches.map(lunch => (
-                <LunchCard 
-                  key={lunch.id}
-                  title={lunch.title}
-                  imagen={lunch.imagen}
-                  price={lunch.price}
-                  tags={lunch.tags}
-                />
+                <div key={lunch.id} className="mb-4 break-inside-avoid">
+                  <LunchCard 
+                    id={lunch.id}
+                    title={lunch.title}
+                    imagen={lunch.imagen}
+                    price={lunch.price}
+                    tags={lunch.tags}
+                  />
+                </div>
               ))}
             </div>
           )}

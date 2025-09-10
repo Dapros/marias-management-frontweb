@@ -10,12 +10,15 @@ export default function LunchForm() {
   // estados y funciones del store de almuerzos
   const {
     draft,
+    isEditing,
     setDraftTitle,
     setDraftImagen,
     setDraftPrice,
     setDraftTags,
     toggleLunchForm,
     addLunchFromDraft,
+    updateLunchFromLunches,
+    deleteLunchById,
     resetDraftImagen,
   } = useLunchStore()
 
@@ -67,13 +70,29 @@ export default function LunchForm() {
     toggleLunchForm()
   }
 
+  // Manejador para actualizar un almuerzo existente
+  const handleUpdate = () => {
+    updateLunchFromLunches()
+    toggleLunchForm()
+  }
+
+  // Manejador para eliminar un almuerzo
+  const handleDelete = () => {
+    if (draft.id) {
+      deleteLunchById(draft.id)
+      toggleLunchForm()
+    }
+  }
+
   return (
     <div>
       <form
         className="flex flex-col gap-6 p-4"
         onSubmit={handleSubmit}
       >
-        <h3 className="text-lg font-semibold text-gray-700 mb-4">Formulario de agregar almuerzo</h3>
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">
+          {isEditing ? "Formulario de editar almuerzo" : "Formulario de agregar almuerzo"}
+        </h3>
 
         <div className="flex space-x-2">
           <label htmlFor="imageUpload" className="flex items-center gap-2 text-teal-700 border w-fit py-2 px-4 border-teal-700 rounded-lg hover:border-dashed cursor-pointer">
@@ -156,14 +175,35 @@ export default function LunchForm() {
           )}
         </div>
 
-        <div>
+        <div className="flex gap-3">
           <button
             type="submit"
             className="py-2 px-4 rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition-normal ease-in-out duration-300 disabled:opacity-50"
             disabled={!draft.title || draft.price <= 0}
           >
-            Guardar almuerzo
+            {isEditing ? "Duplicar almuerzo" : "Guardar almuerzo"}
           </button>
+          
+          {isEditing && (
+            <>
+              <button
+                type="button"
+                onClick={handleUpdate}
+                className="py-2 px-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-normal ease-in-out duration-300 disabled:opacity-50"
+                disabled={!draft.title || draft.price <= 0}
+              >
+                Actualizar almuerzo
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="py-2 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-normal ease-in-out duration-300"
+              >
+                Eliminar almuerzo
+              </button>
+            </>
+          )}
         </div>
       </form>
     </div>
