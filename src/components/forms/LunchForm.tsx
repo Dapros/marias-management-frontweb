@@ -76,6 +76,8 @@ export default function LunchForm() {
         className="flex flex-col gap-6 p-4"
         onSubmit={handleSubmit}
       >
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">Formulario de agregar almuerzo</h3>
+
         <div className="flex space-x-2">
           <label htmlFor="imageUpload" className="flex items-center gap-2 text-teal-700 border w-fit py-2 px-4 border-teal-700 rounded-lg hover:border-dashed cursor-pointer">
             {draft.imagen ? "Cambiar imagen" : "Subir imagen"}

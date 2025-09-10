@@ -4,13 +4,14 @@ import { FaPlus } from "react-icons/fa6";
 import ViewForm from "../components/custom/ViewForm";
 import { IoClose } from "react-icons/io5";
 import { useLunchStore } from "../store/useLunchStore";
+import LunchCard from "../components/cards/LunchCard";
 
 
 export default function LunchPage() {
 
   // state local para mostrar el formulario si se crea un nuevo almuerzo
   const [showLunchForm, setShowLunchForm] = useState(false)
-  const { resetDraft } = useLunchStore()
+  const { lunches, resetDraft } = useLunchStore()
 
   const handleShowLunchForm = () => {
     setShowLunchForm(!showLunchForm)
@@ -48,6 +49,26 @@ export default function LunchPage() {
             <ViewForm />
           </div>
         )}
+
+        {/* Almuerzos listados */}
+        <div className=" mt-8">
+          <h1 className="text-2xl mb-8 font-semibold text-teal-600">Lista de almuerzos agregados</h1>
+          {lunches.length === 0 ? (
+            <p className="text-gray-500 text-center">No hay almuerzos registrados aun.</p>
+          ): (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {lunches.map(lunch => (
+                <LunchCard 
+                  key={lunch.id}
+                  title={lunch.title}
+                  imagen={lunch.imagen}
+                  price={lunch.price}
+                  tags={lunch.tags}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
