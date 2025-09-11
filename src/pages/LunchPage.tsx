@@ -42,7 +42,7 @@ export default function LunchPage() {
         </button>
         {showLunchForm && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 rounded-lg shadow-lg bg-white overflow-hidden">
-            {/* Formulario para crear un nuevo almuerzo */}
+            {/* Formulario para almuerzo */}
             <LunchForm />
             {/* Vista previa de como esta quedando el almuerzo */}
             <ViewForm />
@@ -51,7 +51,7 @@ export default function LunchPage() {
 
         {/* Almuerzos listados */}
         <div className=" mt-8">
-          <h1 className="text-2xl mb-8 font-semibold text-teal-600">Lista de almuerzos agregados</h1>
+          <h1 className="text-xl mb-8 font-semibold text-teal-600">Lista de almuerzos agregados</h1>
           {lunches.length === 0 ? (
             <p className="text-gray-500 text-center">No hay almuerzos registrados aun.</p>
           ): (
