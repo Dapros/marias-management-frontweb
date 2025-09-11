@@ -8,7 +8,7 @@ import LunchCard from "../components/cards/LunchCard";
 
 export default function LunchPage() {
 
-  // state local para mostrar el formulario si se crea un nuevo almuerzo
+  // estados globales y acciones de almuerzo
   const { lunches, showLunchForm, toggleLunchForm, resetDraft, setEditingMode } = useLunchStore()
 
   const handleShowLunchForm = () => {
@@ -23,8 +23,8 @@ export default function LunchPage() {
   return (
     <div className="p-4 md:p-6 min-h-full font-poppins">
       {/* Encabezado de la página con titulo y texto */}
-      <div className="flex flex-col gap-2 mb-6">
-        <h1 className="text-2xl font-bold text-teal-600">Almuerzos</h1>
+      <div className="flex flex-col mb-6">
+        <h1 className="text-xl font-bold text-teal-600">Almuerzos</h1>
         <p>
           Aquí puedes registrar, editar y eliminar almuerzos, que luego puedes seleccionar al hacer
           <span className="font-bold text-teal-600"> pedidos.</span>
