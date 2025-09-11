@@ -49,7 +49,7 @@ const getStorage = () => {
       }
     }
   } catch (_) {
-    // ignore and use fallback
+    // Ignora
   }
   const memory = new Map<string, string>()
   return {
