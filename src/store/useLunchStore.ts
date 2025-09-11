@@ -9,7 +9,7 @@ export type LunchStoreState = {
   // estado boolean para controlar si se muestra el formulario
   showLunchForm: boolean;
 
-  // estado boolean para controlar si estamos editando un almuerzo existente
+  // estado boolean para controlar si se esta editando un almuerzo existente
   isEditing: boolean;
 
   // Borrador del formulario para vista previa
