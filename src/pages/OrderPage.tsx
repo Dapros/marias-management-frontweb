@@ -52,8 +52,15 @@ export default function OrderPage() {
           {orders.length === 0 ? (
             <p className="text-gray-500 text-center">No hay registro de pedidos aun.</p>
           ) : (
-            <ul>
-              
+            <ul className="space-y-2">
+              {orders.map(order => (
+                <li key={order.id} className="p-2 border rounded shadow-sm">
+                  <p><strong>Cliente:</strong> {order.customer}</p>
+                  <p><strong>Torre:</strong> {order.towerNum} <strong>Apto:</strong> {order.apto}</p>
+                  <p><strong>Almuerzos:</strong> {order.lunch.map(l => l.title).join(', ')}</p>
+                  <p><strong>Estado:</strong> <span className={`${order.orderState === 'pagado' ? 'text-green-600' : 'text-red-600'}`}>{order.orderState}</span></p>
+                </li>
+              ))}
             </ul>
           )}
         </div>

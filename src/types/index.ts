@@ -16,10 +16,7 @@ export type PayMethod = {
 }
 
 // Type para estado de pedido
-export type OrderState = {
-  id: number;
-  orderstate: string;
-}
+export type OrderState = 'pendiente' | 'pagado'
 
 // Type para pedidos
 export type OrderType = {
@@ -28,10 +25,10 @@ export type OrderType = {
   apto: number;
   customer: string;
   phoneNum: number;
-  payMethod: PayMethod[];
+  payMethod: PayMethod;
   lunch: LunchType[];
   details: string;
   time: string;
   date: Date;
-  orderState: OrderState[];
+  orderState: OrderState;
 }

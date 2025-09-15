@@ -41,12 +41,12 @@ const initialDraft: OrderStoreState["draft"] = {
   apto: 0,
   customer: "",
   phoneNum: 0,
-  payMethod: [],
+  payMethod: { id: '', label: '', image: '' },
   lunch: [],
   details: "",
   time: "",
   date: new Date(),
-  orderState: [],
+  orderState: 'pendiente',
 }
 
 // funcion para obtener el asyncStorage
