@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import type { LunchType } from "../types"
-import { generateUniqueId } from "../utils/generateId"
 import { createJSONStorage, persist } from "zustand/middleware"
+import { apiService } from "../services/api"
 
 export type LunchStoreState = {
   // Lista global de almuerzos
@@ -12,6 +12,12 @@ export type LunchStoreState = {
 
   // estado boolean para controlar si se esta editando un almuerzo existente
   isEditing: boolean;
+
+  // estado de carga
+  loading: boolean;
+
+  // estado de error
+  error: string | null;
 
   // Borrador del formulario para vista previa
   draft: Omit<LunchType, "id"> & { id?: string };
@@ -24,11 +30,13 @@ export type LunchStoreState = {
   resetDraftImagen: () => void;
   resetDraft: () => void;
   toggleLunchForm: () => void;
-  addLunchFromDraft: () => void;
-  updateLunchFromLunches: () => void;
-  deleteLunchById: (id: string) => void;
+  addLunchFromDraft: () => Promise<void>;
+  updateLunchFromLunches: () => Promise<void>;
+  deleteLunchById: (id: string) => Promise<void>;
   loadLunchToDraft: (lunch: LunchType) => void;
   setEditingMode: (editing: boolean) => void;
+  loadLunches: () => Promise<void>;
+  setError: (error: string | null) => void;
 }
 
 const initialDraft: LunchStoreState["draft"] = {
@@ -65,6 +73,8 @@ export const useLunchStore = create<LunchStoreState>()(
       lunches: [],
       showLunchForm: false,
       isEditing: false,
+      loading: false,
+      error: null,
       draft: initialDraft,
 
       setDraftTitle: (title) => set((state) => ({ draft: { ...state.draft, title } })),
@@ -86,39 +96,112 @@ export const useLunchStore = create<LunchStoreState>()(
       // establecer modo de edición
       setEditingMode: (editing) => set(() => ({ isEditing: editing })),
 
-      // añadir un almuerzo desde el draft actual al estado global
-      addLunchFromDraft: () => {
-        const { draft, lunches, isEditing } = get()
-        const newLunch: LunchType = {
-          id: isEditing ? generateUniqueId() : (draft.id ?? generateUniqueId()),
-          title: draft.title,
-          imagen: draft.imagen,
-          price: draft.price,
-          tags: draft.tags,
+      // establecer error
+      setError: (error) => set(() => ({ error })),
+
+      // cargar almuerzos desde el backend
+      loadLunches: async () => {
+        set({ loading: true, error: null })
+        try {
+          const lunches = await apiService.getLunches()
+          set({ lunches, loading: false })
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error al cargar almuerzos'
+          set({ error: errorMessage, loading: false })
         }
-        set({ lunches: [newLunch, ...lunches] })
-        set({ draft: initialDraft, isEditing: false })
       },
 
-      // actualizar un almuerzo de la lista de estado global seleccionando por el id
-      updateLunchFromLunches: () => {
-        const { draft, lunches } = get()
-        const updatedLunches = lunches.map((lunch) => 
-          lunch.id === draft.id ? { ...lunch, ...draft } : lunch
-        )
-        set({ lunches: updatedLunches })
-        set({ draft: initialDraft, isEditing: false })
+      // añadir un almuerzo desde el draft actual al estado global y backend
+      addLunchFromDraft: async () => {
+        const { draft } = get()
+        set({ loading: true, error: null })
+        
+        try {
+          const newLunch: Omit<LunchType, 'id'> = {
+            title: draft.title,
+            imagen: draft.imagen,
+            price: draft.price,
+            tags: draft.tags,
+          }
+          
+          const response = await apiService.createLunch(newLunch)
+          const { lunches } = get()
+          set({ 
+            lunches: [response.lunch, ...lunches],
+            draft: initialDraft, 
+            isEditing: false,
+            loading: false
+          })
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error al crear almuerzo'
+          set({ error: errorMessage, loading: false })
+        }
       },
 
-      // eliminar un almuerzo del estado global por id
-      deleteLunchById: (id) => set((state) => ({ lunches: state.lunches.filter((lunch) => lunch.id !== id) }))
+      // actualizar un almuerzo de la lista de estado global y backend
+      updateLunchFromLunches: async () => {
+        const { draft } = get()
+        if (!draft.id) return
+        
+        set({ loading: true, error: null })
+        
+        try {
+          const updateData: Partial<LunchType> = {
+            title: draft.title,
+            imagen: draft.imagen,
+            price: draft.price,
+            tags: draft.tags,
+          }
+          
+          const response = await apiService.updateLunch(draft.id, updateData)
+          const { lunches } = get()
+          const updatedLunches = lunches.map((lunch) => 
+            lunch.id === draft.id ? response.updated : lunch
+          )
+          set({ 
+            lunches: updatedLunches,
+            draft: initialDraft, 
+            isEditing: false,
+            loading: false
+          })
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error al actualizar almuerzo'
+          set({ error: errorMessage, loading: false })
+        }
+      },
+
+      // eliminar un almuerzo del estado global y backend
+      deleteLunchById: async (id) => {
+        set({ loading: true, error: null })
+        
+        try {
+          await apiService.deleteLunch(id)
+          const { lunches } = get()
+          set({ 
+            lunches: lunches.filter((lunch) => lunch.id !== id),
+            loading: false
+          })
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error al eliminar almuerzo'
+          set({ error: errorMessage, loading: false })
+        }
+      }
     }),
     {
-      // clave en AsyncStorage
-      name: "lunch-local-storage",
+      // Solo persistir el estado del formulario, no los datos de almuerzos
+      name: "lunch-form-storage",
       storage: createJSONStorage(getStorage),
+      partialize: (state) => ({
+        showLunchForm: state.showLunchForm,
+        isEditing: state.isEditing,
+        draft: state.draft,
+      }),
       onRehydrateStorage: () => (state) => {
-        console.log('Persis - lunch-local-storage', state)
+        console.log('Persist - lunch-form-storage', state)
+        // Cargar almuerzos desde el backend al inicializar
+        if (state) {
+          state.loadLunches()
+        }
       }
     }
   )

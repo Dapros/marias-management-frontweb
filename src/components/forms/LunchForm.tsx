@@ -11,6 +11,8 @@ export default function LunchForm() {
   const {
     draft,
     isEditing,
+    loading,
+    error,
     setDraftTitle,
     setDraftImagen,
     setDraftPrice,
@@ -20,6 +22,7 @@ export default function LunchForm() {
     updateLunchFromLunches,
     deleteLunchById,
     resetDraftImagen,
+    setError,
   } = useLunchStore()
 
   // manejador de cambios en el titulo
@@ -52,35 +55,57 @@ export default function LunchForm() {
     setDraftTags(draft.tags.filter(tag => tag !== tagToRemove))
   }
 
-  // manejador de cambios de la imagen
+  // manejador de cambios de la imagen (convierte a base64 data URL)
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const objectUrl = URL.createObjectURL(file)
-      setDraftImagen(objectUrl)
-    } else {
+    if (!file) {
+      setDraftImagen("")
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      setDraftImagen(result)
+    }
+    reader.onerror = () => {
       setDraftImagen("")
     }
+    reader.readAsDataURL(file)
   }
 
   // Envio del formulario para guardar en el store
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    addLunchFromDraft()
-    toggleLunchForm()
+    setError(null)
+    try {
+      await addLunchFromDraft()
+      toggleLunchForm()
+    } catch (error) {
+      console.error('Error al guardar almuerzo:', error)
+    }
   }
 
   // Manejador para actualizar un almuerzo existente
-  const handleUpdate = () => {
-    updateLunchFromLunches()
-    toggleLunchForm()
+  const handleUpdate = async () => {
+    setError(null)
+    try {
+      await updateLunchFromLunches()
+      toggleLunchForm()
+    } catch (error) {
+      console.error('Error al actualizar almuerzo:', error)
+    }
   }
 
   // Manejador para eliminar un almuerzo
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (draft.id) {
-      deleteLunchById(draft.id)
-      toggleLunchForm()
+      setError(null)
+      try {
+        await deleteLunchById(draft.id)
+        toggleLunchForm()
+      } catch (error) {
+        console.error('Error al eliminar almuerzo:', error)
+      }
     }
   }
 
@@ -93,6 +118,22 @@ export default function LunchForm() {
         <h3 className="text-lg font-semibold text-gray-700 mb-4">
           {isEditing ? "Formulario de editar almuerzo" : "Formulario de agregar almuerzo"}
         </h3>
+
+        {/* Mostrar errores */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <p className="font-semibold">Error:</p>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {/* Mostrar estado de carga */}
+        {loading && (
+          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+            <p className="font-semibold">Procesando...</p>
+            <p>Por favor espera mientras se guarda la información.</p>
+          </div>
+        )}
 
         <div className="flex space-x-2">
           <label htmlFor="imageUpload" className="flex items-center gap-2 text-teal-700 border w-fit py-2 px-4 border-teal-700 rounded-lg hover:border-dashed cursor-pointer">
@@ -179,9 +220,9 @@ export default function LunchForm() {
           <button
             type="submit"
             className="py-2 px-4 rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition-normal ease-in-out duration-300 disabled:opacity-50"
-            disabled={!draft.title || draft.price <= 0}
+            disabled={!draft.title || draft.price <= 0 || loading}
           >
-            {isEditing ? "Duplicar almuerzo" : "Guardar almuerzo"}
+            {loading ? "Guardando..." : (isEditing ? "Duplicar almuerzo" : "Guardar almuerzo")}
           </button>
           
           {isEditing && (
@@ -190,17 +231,18 @@ export default function LunchForm() {
                 type="button"
                 onClick={handleUpdate}
                 className="py-2 px-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-normal ease-in-out duration-300 disabled:opacity-50"
-                disabled={!draft.title || draft.price <= 0}
+                disabled={!draft.title || draft.price <= 0 || loading}
               >
-                Actualizar almuerzo
+                {loading ? "Actualizando..." : "Actualizar almuerzo"}
               </button>
               
               <button
                 type="button"
                 onClick={handleDelete}
-                className="py-2 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-normal ease-in-out duration-300"
+                className="py-2 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-normal ease-in-out duration-300 disabled:opacity-50"
+                disabled={loading}
               >
-                Eliminar almuerzo
+                {loading ? "Eliminando..." : "Eliminar almuerzo"}
               </button>
             </>
           )}

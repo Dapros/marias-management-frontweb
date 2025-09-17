@@ -9,7 +9,7 @@ import LunchCard from "../components/cards/LunchCard";
 export default function LunchPage() {
 
   // estados globales y acciones de almuerzo
-  const { lunches, showLunchForm, toggleLunchForm, resetDraft, setEditingMode } = useLunchStore()
+  const { lunches, showLunchForm, loading, error, toggleLunchForm, resetDraft, setEditingMode, loadLunches } = useLunchStore()
 
   const handleShowLunchForm = () => {
     toggleLunchForm()
@@ -51,10 +51,33 @@ export default function LunchPage() {
 
         {/* Almuerzos listados */}
         <div className=" mt-8">
-          <h1 className="text-xl mb-8 font-semibold text-teal-600">Lista de almuerzos agregados</h1>
-          {lunches.length === 0 ? (
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-xl font-semibold text-teal-600">Lista de almuerzos agregados</h1>
+            <button
+              onClick={loadLunches}
+              disabled={loading}
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
+            >
+              {loading ? "Cargando..." : "Actualizar"}
+            </button>
+          </div>
+
+          {/* Mostrar errores */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              <p className="font-semibold">Error al cargar almuerzos:</p>
+              <p>{error}</p>
+            </div>
+          )}
+
+          {loading && lunches.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+              <p className="mt-2 text-gray-500">Cargando almuerzos...</p>
+            </div>
+          ) : lunches.length === 0 ? (
             <p className="text-gray-500 text-center">No hay almuerzos registrados aun.</p>
-          ): (
+          ) : (
             <div className="columns-1 md:columns-2 lg:columns-4 gap-4">
               {lunches.map(lunch => (
                 <div key={lunch.id} className="mb-4 break-inside-avoid">
