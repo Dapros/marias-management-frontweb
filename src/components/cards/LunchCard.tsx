@@ -34,7 +34,10 @@ export default function LunchCard({ id, title, imagen, price, tags }: LunchCardP
     >
       <div className="relative rounded-lg overflow-hidden w-fit flex items-center">
         <img 
-          src={imagen && imagen.trim() !== '' ? imagen : "/logo/mariasMLogo.png"}
+          src={imagen && imagen.trim() !== '' ? 
+            (imagen.startsWith('http') ? imagen : `${import.meta.env.VITE_API_BASE_URL}${imagen}`) : 
+            "/logo/mariasMLogo.png"
+          }
           alt={title}
           className={`transform transition-transform duration-300 hover:scale-125 ${imagen ? 'object-cover' : 'opacity-10'}`}
         />
