@@ -1,6 +1,7 @@
 import type { LunchType } from '../types'
 
-const API_BASE_URL = 'http://localhost:4000/api'
+const API_URL = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL = `${API_URL}/api`
 
 class ApiService {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
