@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { OrderType } from "../types"
 import { generateUniqueId } from "../utils/generateId";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { apiService } from "../services/api";
 
 export type OrderStoreState = {
   // Lista global de pedidos
@@ -12,6 +13,12 @@ export type OrderStoreState = {
 
   // estado booleano para controlar si se esta editando un pedido existente
   isEditing: boolean;
+
+  // estado de carga
+  loading: boolean;
+
+  // estado de error
+  error: string | null;
 
   // Borrador del formulario de pedidos para vista previa
   draft: Omit<OrderType, "id"> & { id?: string };
@@ -30,10 +37,13 @@ export type OrderStoreState = {
 
   resetDraft: () => void;
   toggleOrderForm: () => void;
-  addOrderFromDraft: () => void;
-  updateOrderFromOrders: () => void;
+  addOrderFromDraft: () => Promise<void>;
+  updateOrderFromOrders: () => Promise<void>;
+  deleteLunchById: (id: string) => Promise<void>;
   loadOrderToDraft: (order: OrderType) => void;
   setEditingMode: (editing: boolean) => void;
+  loadOrders: () => Promise<void>;
+  setError: (error: string | null) => void;
 }
 
 const initialDraft: OrderStoreState["draft"] = {
@@ -76,6 +86,8 @@ export const useOrderStore = create<OrderStoreState>()(
       orders: [],
       showOrderForm: false,
       isEditing: false,
+      loading: false,
+      error: null,
       draft: initialDraft,
 
       setDraftTowerNum: (towerNum) => set((state) => ({ draft: { ...state.draft, towerNum}})),
@@ -101,42 +113,124 @@ export const useOrderStore = create<OrderStoreState>()(
       // establecer modo edicion
       setEditingMode: (editing) => set(() => ({ isEditing: editing })),
 
-      // añadir un nuevo pedido desde el draft actual al estado global
-      addOrderFromDraft: () => {
-        const { draft, orders, isEditing } = get()
-        const newOrder: OrderType = {
-          id: isEditing ? generateUniqueId() : (draft.id ?? generateUniqueId()),
-          towerNum: draft.towerNum,
-          apto: draft.apto,
-          customer: draft.customer,
-          phoneNum: draft.phoneNum,
-          payMethod: draft.payMethod,
-          lunch: draft.lunch,
-          details: draft.details,
-          time: draft.time,
-          date: draft.date,
-          orderState: draft.orderState,
+      // establecer error
+      setError: (error) => set(() => ({ error })),
+
+      // cargar pedidos desde el backend
+      loadOrders: async () => {
+        set({ loading: true, error: null })
+        try {
+          const orders = await apiService.getOrders()
+          set({ orders, loading: false})
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error al cargar Pedidos'
+          set({ error: errorMessage, loading: false })
         }
-        set({ orders: [newOrder, ...orders] })
-        set({ draft: initialDraft, isEditing: false})
       },
 
-      // actualizar un pedido de la lista del estado global seleccionado por id
-      updateOrderFromOrders: () => {
-        const { draft, orders } = get()
-        const  updatedOrders = orders.map((order) => 
-          order.id === draft.id ? { ...order, ...draft } : order
-        )
-        set({ orders: updatedOrders})
-        set({ draft: initialDraft, isEditing: false})
+      // añadir un nuevo pedido desde el draft actual al estado global y backend
+      addOrderFromDraft: async () => {
+        const { draft } = get()
+        set({ loading: true, error: null })
+
+        try {
+          const newOrder: Omit<OrderType, 'id'> = {
+            towerNum: draft.towerNum,
+            apto: draft.apto,
+            customer: draft.customer,
+            phoneNum: draft.phoneNum,
+            payMethod: draft.payMethod,
+            lunch: draft.lunch,
+            details: draft.details,
+            time: draft.time,
+            date: draft.date,
+            orderState: draft.orderState,
+          }
+
+          const response = await apiService.createOrder(newOrder)
+          const { orders } = get()
+          set({
+            orders: [response.order, ...orders],
+            draft: initialDraft,
+            isEditing: false,
+            loading: false
+          })
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error al crear un pedido'
+          set({ error: errorMessage, loading: false })
+        }
       },
+
+      // actualizar un pedido de la lista del estado global seleccionado por id y backend
+      updateOrderFromOrders: async () => {
+        const { draft } = get()
+        if (!draft.id) return 
+
+        set({ loading: true, error: null })
+
+        try {
+          const updateData: Partial<OrderType> = {
+            towerNum: draft.towerNum,
+            apto: draft.apto,
+            customer: draft.customer,
+            phoneNum: draft.phoneNum,
+            payMethod: draft.payMethod,
+            lunch: draft.lunch,
+            details: draft.details,
+            time: draft.time,
+            date: draft.date,
+            orderState: draft.orderState,
+          }
+
+          const response = await apiService.updateOrder(draft.id, updateData)
+          const { orders } = get()
+          const updatedOrders = orders.map((order) =>
+            order.id === draft.id ? response.updated : order
+          )
+          set({
+            orders: updatedOrders,
+            draft: initialDraft,
+            isEditing: false,
+            loading: false
+          })
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error al actualizar pedido'
+          set({ error: errorMessage, loading: false})
+        }
+      },
+
+      // eliminar un pedido del estado global y backend
+      deleteLunchById: async (id) => {
+        set({ loading: true, error: null })
+
+        try {
+          await apiService.deleteOrder(id)
+          const { orders } = get()
+          set({
+            orders: orders.filter((order) => order.id !== id),
+            loading: false
+          })
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error al eliminar pedido'
+          set({ error: errorMessage, loading: false })
+        }
+      }
     }),
     {
       // clave en AsyncStorage
       name: "order-local-storage",
       storage: createJSONStorage(getStorage),
+      partialize: (state) => ({
+        showOrderForm: state.showOrderForm,
+        isEditing: state.isEditing,
+        draft: state.draft,
+      }),
       onRehydrateStorage: () => (state) => {
         console.log('Persist - order-local-storage', state)
+        // Cargar pedidos desde el backend al inicializar
+        if (state) {
+          state.loadOrders()
+        }
       }
     }
   )
