@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import type { OrderType } from "../types"
-import { generateUniqueId } from "../utils/generateId";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { apiService } from "../services/api";
 
