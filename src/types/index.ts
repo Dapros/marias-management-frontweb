@@ -8,6 +8,11 @@ export type LunchType = {
   tags: string[];
 }
 
+// Item incluido en pedido: almuerzo y cantidad seleccionada
+export type OrderItem = LunchType & {
+  quantity: number;
+}
+
 // Type para metodos de pago
 export type PayMethod = {
   id: string;
@@ -26,9 +31,10 @@ export type OrderType = {
   customer?: string;
   phoneNum: number;
   payMethod: PayMethod;
-  lunch: LunchType[];
+  lunch: OrderItem[];
   details?: string;
   time?: string;
   date?: string | Date;
   orderState: OrderState;
+  total?: number;
 }

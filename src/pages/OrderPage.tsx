@@ -81,6 +81,7 @@ export default function OrderPage() {
                     <th className="px-6 py-3">Método de pago</th>
                     <th className="px-6 py-3">Almuerzo</th>
                     <th className="px-6 py-3">Fecha y hora</th>
+                    <th className="px-6 py-3">Total</th>
                     <th className="px-6 py-3">Estado</th>
                     <th className="px-6 py-3">Acciones</th>
                   </tr>

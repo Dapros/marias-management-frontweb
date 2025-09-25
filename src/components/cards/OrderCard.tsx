@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useOrderStore } from "../../store/useOrderStore";
 import type { LunchType, PayMethod, OrderState } from "../../types"
+import { formatCurrencyCOP } from "../../utils/format/curremcy";
 
 type OrderCardProps = {
   id: string;
@@ -9,15 +10,24 @@ type OrderCardProps = {
   customer?: string;
   phoneNum: number;
   payMethod: PayMethod;
-  lunch: LunchType[];
+  lunch: (LunchType & { quantity?: number })[];
   time?: string;
   date?: string | Date;
   orderState: OrderState;
-}
+  total?: number;
+};
 
-export default function OrderCard({ id, towerNum, apto, customer, phoneNum, payMethod, lunch, time, date, orderState } : OrderCardProps) {
-  
-  const { loadOrderToDraft, toggleOrderForm, showOrderForm, setEditingMode, deleteOrderById, updateOrderStateById, } = useOrderStore();
+export default function OrderCard({ id, towerNum, apto, customer, phoneNum, payMethod, lunch, time, date, orderState, total } : OrderCardProps) {
+
+  const {
+    loadOrderToDraft,
+    toggleOrderForm,
+    showOrderForm,
+    setEditingMode,
+    deleteOrderById,
+    updateOrderStateById,
+  } = useOrderStore();
+
   const [showConfirm, setShowConfirm] = useState(false)
   const cancelDelete = () => setShowConfirm(false)
 
@@ -44,7 +54,11 @@ export default function OrderCard({ id, towerNum, apto, customer, phoneNum, payM
     }
   })();
 
-  const dateStr = dateObj ? dateObj.toLocaleDateString() : "-";
+  const dateStr = dateObj ? dateObj.toLocaleDateString() : "-"
+
+  const computedTotal = typeof total === 'number'
+    ? total
+    : (lunch || []).reduce((s, it) => s + ((it.price || 0) * (it.quantity || 0)), 0)
 
   const handleEdit = () => {
     // Cargar al draft y abrir formulario en modo edición
@@ -59,6 +73,7 @@ export default function OrderCard({ id, towerNum, apto, customer, phoneNum, payM
       time,
       date,
       orderState,
+      total: computedTotal
     } as any);
     setEditingMode(true);
     if (!showOrderForm) toggleOrderForm();
@@ -92,8 +107,11 @@ export default function OrderCard({ id, towerNum, apto, customer, phoneNum, payM
         <td className="px-6 py-2">{customer ?? 'N/A'}</td>
         <td className="px-6 py-2">{phoneNum ?? 'N/A'}</td>
         <td className="px-6 py-2">{payMethod.label ?? 'N/A'}</td>
-        <td className="px-6 py-2">{lunch.map(l => l.title).join(', ') || 'N/A'}</td>
+        <td className="px-6 py-2">
+          {lunch.map((l) => `${l.title} x${l.quantity ?? 1}`).join(', ') || "N/A"}
+        </td>
         <td className="px-6 py-2">{`${dateStr} - ${timeStr}`}</td>
+        <td className="px-6 py-2 font-semibold">{formatCurrencyCOP.format(computedTotal)}</td>
         <td className="px-6 py-2">
           <select
             value={orderState}

@@ -2,34 +2,41 @@ import { create } from "zustand";
 import type { OrderType } from "../types"
 import { createJSONStorage, persist } from "zustand/middleware";
 import { apiService } from "../services/api";
+import { computeTotal } from "../utils/computeTotal";
 
 const normalizeOrder = (o: Partial<OrderType> & { id?: string }): OrderType => {
-  const dateRaw = (o as any).date;
-  let dateValue: Date | undefined = undefined;
-
-  if (dateRaw !== undefined && dateRaw !== null && dateRaw !== "") {
-    if (dateRaw instanceof Date) {
-      dateValue = !isNaN(dateRaw.getTime()) ? dateRaw : undefined;
-    } else if (typeof dateRaw === "string") {
-      const parsed = new Date(dateRaw);
-      dateValue = !isNaN(parsed.getTime()) ? parsed : undefined;
+  // date handling (como antes)...
+  const dateRaw = (o as any).date
+  let dateValue: Date | undefined = undefined
+  if (dateRaw !== undefined && dateRaw !== null && dateRaw !== '') {
+    if (dateRaw instanceof Date) dateValue = !isNaN(dateRaw.getTime()) ? dateRaw : undefined
+    else if (typeof dateRaw === 'string') {
+      const parsed = new Date(dateRaw)
+      dateValue = !isNaN(parsed.getTime()) ? parsed : undefined
     }
   }
-
+  const lunchRaw = (o.lunch as any) ?? []
+  const lunchItems = lunchRaw.map((it: any) => ({
+    ...it,
+    quantity: typeof it.quantity === 'number' ? it.quantity : Number(it.quantity || 1),
+  }))
+  const totalVal = typeof (o as any).total === 'number' ? (o as any).total : computeTotal(lunchItems)
   return {
-    id: o.id ?? (o as any).id ?? "",
-    towerNum: (o.towerNum as string) ?? "",
+    id: o.id ?? (o as any).id ?? '',
+    towerNum: (o.towerNum as string) ?? '',
     apto: (o.apto as number) ?? 0,
-    customer: (o.customer as string) ?? "",
+    customer: (o.customer as string) ?? '',
     phoneNum: (o.phoneNum as number) ?? 0,
-    payMethod: (o.payMethod as any) ?? { id: "", label: "", image: "" },
-    lunch: (o.lunch as any) ?? [],
-    details: (o.details as string) ?? "",
-    time: (o.time as string) ?? "",
+    payMethod: (o.payMethod as any) ?? { id: '', label: '', image: '' },
+    lunch: lunchItems,
+    details: (o.details as string) ?? '',
+    time: (o.time as string) ?? '',
     date: dateValue,
-    orderState: (o.orderState as OrderType["orderState"]) ?? "pendiente",
-  };
-};
+    orderState: (o.orderState as OrderType['orderState']) ?? 'pendiente',
+    total: totalVal,
+  }
+}
+
 
 
 export type OrderStoreState = {
@@ -164,19 +171,19 @@ export const useOrderStore = create<OrderStoreState>()(
         set({ loading: true, error: null });
 
         try {
-          const newOrder: Omit<OrderType, "id"> = {
-            towerNum: draft.towerNum,
-            apto: draft.apto,
-            customer: draft.customer,
-            phoneNum: draft.phoneNum,
-            payMethod: draft.payMethod,
-            lunch: draft.lunch,
-            details: draft.details,
-            time: draft.time,
-            date: draft.date,
-            orderState: draft.orderState,
-          };
-
+          const newOrder: Omit<OrderType, 'id'> = {
+          towerNum: draft.towerNum,
+          apto: draft.apto,
+          customer: draft.customer,
+          phoneNum: draft.phoneNum,
+          payMethod: draft.payMethod,
+          lunch: draft.lunch, // cada item debe llevar quantity
+          details: draft.details,
+          time: draft.time,
+          date: draft.date,
+          orderState: draft.orderState,
+          total: computeTotal(draft.lunch)
+        }
           const response = await apiService.createOrder(newOrder);
           // backend devuelve response.order
           const saved = normalizeOrder(response.order);

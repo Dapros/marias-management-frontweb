@@ -1,10 +1,10 @@
 import type { ChangeEvent, FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useOrderStore } from "../../store/useOrderStore";
 import { useLunchStore } from "../../store/useLunchStore";
-import type { LunchType, PayMethod } from "../../types";
+import type { LunchType, OrderItem, PayMethod } from "../../types";
 
 export default function OrderForm() {
   const {
@@ -42,88 +42,112 @@ export default function OrderForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useCurrentDateTime])
 
+  // Helpers para gestionar el draft de almuerzos con quantity
+  const addLunchToDraft = (lunchToAdd: LunchType) => {
+    const current = draft.lunch ?? []
+    const exists = current.find((l) => l.id === lunchToAdd.id)
+    if (exists) {
+      // si ya existe, incrementamos en 1
+      const updated = current.map((l) => (l.id === lunchToAdd.id ? { ...l, quantity: (l.quantity ?? 1) + 1 } : l))
+      setDraftLunch(updated as any)
+      return
+    }
+    const newItem: OrderItem = { ...lunchToAdd, quantity: 1 }
+    setDraftLunch([...(current as any), newItem] as any)
+  };
+
+  const removeLunchFromDraft = (id: string) => {
+    const updated = (draft.lunch ?? []).filter((l) => l.id !== id)
+    setDraftLunch(updated as any)
+  };
+
+  const setQuantityForLunch = (id: string, qty: number) => {
+    if (qty < 1) qty = 1
+    const updated = (draft.lunch ?? []).map((l) => (l.id === id ? ({ ...l, quantity: qty }) : l))
+    setDraftLunch(updated as any)
+  };
+
+  // total calculado localmente (memoizado)
+  const totalCalculated = useMemo(() => {
+    const items = draft.lunch ?? []
+    return items.reduce((sum, it) => sum + ((it.price ?? 0) * (it.quantity ?? 0)), 0)
+  }, [draft.lunch])
+
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     switch (name) {
       case "towerNum":
-        setDraftTowerNum(value)
+        setDraftTowerNum(value);
         break;
       case "apto":
-        setDraftApto(Number(value))
+        setDraftApto(Number(value));
         break;
       case "customer":
-        setDraftCustomer(value)
+        setDraftCustomer(value);
         break;
       case "phoneNum":
-        setDraftPhoneNum(Number(value))
+        setDraftPhoneNum(Number(value));
         break;
       case "payMethod":
-        const selectedPayMethod = payMethods.find((p) => p.id === value)
-        if (selectedPayMethod) {
-          setDraftPayMethod(selectedPayMethod)
-        }
+        const selectedPayMethod = payMethods.find((p) => p.id === value);
+        if (selectedPayMethod) setDraftPayMethod(selectedPayMethod);
         break;
       case "details":
-        setDraftDetails(value)
+        setDraftDetails(value);
         break;
       case "orderState":
-        setDraftOrderState(value as "pendiente" | "pagado")
+        setDraftOrderState(value as "pendiente" | "pagado");
         break;
     }
-  }
-
-  const handleLunchChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const selectedLunches = Array.from(e.target.selectedOptions, (option) => {
-      const lunch = lunches.find((l) => l.id === option.value)
-      return lunch ? lunch : null
-    }).filter((lunch): lunch is LunchType => lunch !== null)
-    setDraftLunch(selectedLunches)
   }
 
   const handleTimeChange = (time: Date | null) => {
-    if (time) {
-      setDraftTime(time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
-    }
+    if (time) setDraftTime(time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
   }
 
   const handleDateChange = (date: Date | null) => {
-    if (date) {
-      setDraftDate(date)
-    }
-  }
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    if (isEditing) {
-      updateOrderFromOrders()
-    } else {
-      addOrderFromDraft()
-    }
-    toggleOrderForm()
+    if (date) setDraftDate(date)
   }
 
   // helper para DatePicker.selected (aceptar string | Date | undefined)
   const dateSelected = (() => {
-    if (!draft.date) return null
-    if (draft.date instanceof Date) return isNaN(draft.date.getTime()) ? null : draft.date
-    // si es string, intentar parsear
+    if (!draft.date) return null;
+    if (draft.date instanceof Date) return isNaN(draft.date.getTime()) ? null : draft.date;
     try {
-      const parsed = new Date(draft.date)
-      return isNaN(parsed.getTime()) ? null : parsed
+      const parsed = new Date(draft.date);
+      return isNaN(parsed.getTime()) ? null : parsed;
     } catch {
-      return null
+      return null;
     }
-  })()
+  })();
 
   const timeSelected = (() => {
-    if (!draft.time) return null
+    if (!draft.time) return null;
     try {
-      const d = new Date(`1970-01-01T${draft.time}`)
-      return isNaN(d.getTime()) ? null : d
+      const d = new Date(`1970-01-01T${draft.time}`);
+      return isNaN(d.getTime()) ? null : d;
     } catch {
-      return null
+      return null;
     }
-  })()
+  })();
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    // antes de enviar: asegurar que draft.lunch items tengan quantity numérica
+    const normalizedLunch = (draft.lunch ?? []).map((it) => ({
+      ...it,
+      quantity: typeof it.quantity === "number" ? it.quantity : Number(it.quantity ?? 1),
+    })) as any;
+    // set temporal en draft (para que store lo lea) — setDraftLunch viene del store
+    setDraftLunch(normalizedLunch);
+    // además se asumirá que el store calcula total a partir del draft.lunch si lo necesita
+    if (isEditing) {
+      updateOrderFromOrders();
+    } else {
+      addOrderFromDraft();
+    }
+    toggleOrderForm();
+  };
 
   return (
     <div className="p-4">
@@ -139,7 +163,7 @@ export default function OrderForm() {
           </div>
           <div className="flex flex-col space-y-2">
             <label htmlFor="apto">Apto</label>
-            <input type="number" id="apto" name="apto" value={draft.apto} onChange={handleInputChange} className="border p-2 rounded" />
+            <input type="number" id="apto" name="apto" value={draft.apto ?? ""} onChange={handleInputChange} className="border p-2 rounded" />
           </div>
         </div>
 
@@ -158,22 +182,46 @@ export default function OrderForm() {
           <select id="payMethod" name="payMethod" value={draft.payMethod?.id ?? ""} onChange={handleInputChange} className="border p-2 rounded">
             <option value="">-- Seleccione --</option>
             {payMethods.map((method) => (
-              <option key={method.id} value={method.id}>
-                {method.label}
-              </option>
+              <option key={method.id} value={method.id}>{method.label}</option>
             ))}
           </select>
         </div>
 
+        {/* --- Selección de almuerzos (agrega con quantity) --- */}
         <div className="flex flex-col space-y-2">
-          <label htmlFor="lunch">Almuerzos</label>
-          <select id="lunch" name="lunch" multiple value={draft.lunch?.map((l) => l.id) ?? []} onChange={handleLunchChange} className="border p-2 rounded h-32">
-            {lunches.map((lunch) => (
-              <option key={lunch.id} value={lunch.id}>
-                {lunch.title}
-              </option>
-            ))}
+          <label>Almuerzos</label>
+          <select onChange={(e) => {
+            const id = e.target.value;
+            if (!id) return;
+            const found = lunches.find(l => l.id === id);
+            if (found) addLunchToDraft(found);
+            e.currentTarget.value = "";
+          }} className="border p-2 rounded">
+            <option value="">-- Selecciona para agregar --</option>
+            {lunches.map(l => <option key={l.id} value={l.id}>{l.title} — {l.price}</option>)}
           </select>
+
+          {/* lista de items agregados con controles de cantidad */}
+          {draft.lunch && draft.lunch.length > 0 && (
+            <div className="mt-2 space-y-2">
+              {draft.lunch.map((l) => (
+                <div key={l.id} className="flex items-center justify-between gap-2 border p-2 rounded">
+                  <div>
+                    <div className="font-medium">{l.title}</div>
+                    <div className="text-sm text-gray-600">Unit: {l.price}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => setQuantityForLunch(l.id, (l.quantity ?? 1) - 1)} className="px-2 py-1 border rounded">-</button>
+                    <input type="number" value={l.quantity ?? 1} min={1} onChange={(e) => setQuantityForLunch(l.id, Number(e.target.value) || 1)} className="w-16 text-center border rounded px-1 py-1" />
+                    <button type="button" onClick={() => setQuantityForLunch(l.id, (l.quantity ?? 1) + 1)} className="px-2 py-1 border rounded">+</button>
+                    <button type="button" onClick={() => removeLunchFromDraft(l.id)} className="px-2 py-1 text-red-600 border rounded ml-2">Eliminar</button>
+                  </div>
+                </div>
+              ))}
+
+              <div className="text-right font-semibold">Total parcial: <span className="ml-2">{totalCalculated}</span></div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col space-y-2">
@@ -189,29 +237,11 @@ export default function OrderForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col space-y-2">
             <label htmlFor="time">Hora</label>
-            <DatePicker
-              id="time"
-              selected={timeSelected}
-              onChange={handleTimeChange}
-              showTimeSelect
-              showTimeSelectOnly
-              timeIntervals={15}
-              timeCaption="Time"
-              dateFormat="h:mm aa"
-              className="border p-2 rounded w-full"
-              disabled={useCurrentDateTime}
-            />
+            <DatePicker id="time" selected={timeSelected} onChange={handleTimeChange} showTimeSelect showTimeSelectOnly timeIntervals={15} timeCaption="Time" dateFormat="h:mm aa" className="border p-2 rounded w-full" disabled={useCurrentDateTime} />
           </div>
           <div className="flex flex-col space-y-2">
             <label htmlFor="date">Fecha</label>
-            <DatePicker
-              id="date"
-              selected={dateSelected}
-              onChange={handleDateChange}
-              dateFormat="MMMM d, yyyy"
-              className="border p-2 rounded w-full"
-              disabled={useCurrentDateTime}
-            />
+            <DatePicker id="date" selected={dateSelected} onChange={handleDateChange} dateFormat="MMMM d, yyyy" className="border p-2 rounded w-full" disabled={useCurrentDateTime} />
           </div>
         </div>
 
