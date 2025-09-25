@@ -25,7 +25,7 @@ export default function LunchPage() {
       {/* Encabezado de la página con titulo y texto */}
       <div className="flex flex-col mb-6">
         <h1 className="text-xl font-bold text-teal-600">Almuerzos</h1>
-        <p>
+        <p className="text-gray-700">
           Aquí puedes registrar, editar y eliminar almuerzos, que luego puedes seleccionar al hacer
           <span className="font-bold text-teal-600"> pedidos.</span>
         </p>
@@ -76,7 +76,7 @@ export default function LunchPage() {
               <p className="mt-2 text-gray-500">Cargando almuerzos...</p>
             </div>
           ) : lunches.length === 0 ? (
-            <p className="text-gray-500 text-center">No hay almuerzos registrados aun.</p>
+            <p className="text-gray-500 text-center py-16">No hay almuerzos registrados aun.</p>
           ) : (
             <div className="columns-1 md:columns-2 lg:columns-4 gap-4">
               {lunches.map(lunch => (
