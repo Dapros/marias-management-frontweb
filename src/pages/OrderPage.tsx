@@ -8,7 +8,7 @@ import OrderCard from "../components/cards/OrderCard"
 export default function OrderPage() {
 
   // estados globales y acciones de pedidos
-  const { orders, showOrderForm, toggleOrderForm, resetDraft, setEditingMode } = useOrderStore()
+  const { orders, showOrderForm, toggleOrderForm, resetDraft, setEditingMode, loadOrders, loading } = useOrderStore()
   
   const handleShowOrderForm = () => {
     toggleOrderForm()
@@ -23,9 +23,9 @@ export default function OrderPage() {
       {/* Encabezado de la pagina con titulo y texto */}
       <div className="flex flex-col mb-6">
         <h1 className="text-xl font-bold text-teal-600">Pedidos</h1>
-        <p>
-          En esta pestaña puedes registrar y editar pedidos que se hagan de 
-          <span className="font-bold text-teal-600"> almuerzos.</span>
+        <p className="text-gray-700">
+          En esta pestaña puedes registrar, editar y eliminar 
+          <span className="font-bold text-teal-600"> pedidos.</span>
         </p>
       </div>
 
@@ -49,43 +49,64 @@ export default function OrderPage() {
 
         {/* Lista de pedidos */}
         <div className="mt-8">
-          <h1 className="text-xl mb-8 font-semibold text-teal-600">Lista de pedidos agregados</h1>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h1 className="text-xl font-semibold text-teal-600">
+                Lista de pedidos agregados
+              </h1>
+              <p className="text-sm text-gray-700">Pedidos registrados recientemente</p>
+            </div>
+            <div>
+              <button
+                onClick={loadOrders}
+                disabled={loading}
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
+              >
+                {loading ? "Cargando..." : "Actualizar"}
+              </button>
+            </div>
+          </div>
+
           {orders.length === 0 ? (
-            <p className="text-gray-500 text-center">No hay registro de pedidos aun.</p>
+            <p className="text-gray-500 py-16 text-center">No hay registro de pedidos aun.</p>
           ) : (
-            <table className="min-w-full border-collapse">
-              <thead>
-                <tr>
-                  <th>Torre</th>
-                  <th>Apartamento</th>
-                  <th>Vecino</th>
-                  <th>Teléfono</th>
-                  <th>Método de pago</th>
-                  <th>Almuerzo</th>
-                  <th>Hora y fecha</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map(order => (
-                  <OrderCard 
-                    id={order.id}
-                    towerNum={order.towerNum}
-                    apto={order.apto}
-                    customer={order.customer}
-                    phoneNum={order.phoneNum}
-                    payMethod={order.payMethod}
-                    lunch={order.lunch}
-                    time={order.time}
-                    date={order.date}
-                    orderState={order.orderState}
-                  />
-                ))}
-              </tbody>
-            </table>
+            <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+              <table className="w-full text-sm text-left text-gray-800">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3">Torre</th>
+                    <th className="px-6 py-3">Apartamento</th>
+                    <th className="px-6 py-3">Vecino</th>
+                    <th className="px-6 py-3">Teléfono</th>
+                    <th className="px-6 py-3">Método de pago</th>
+                    <th className="px-6 py-3">Almuerzo</th>
+                    <th className="px-6 py-3">Fecha y hora</th>
+                    <th className="px-6 py-3">Estado</th>
+                    <th className="px-6 py-3">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <OrderCard
+                      key={order.id}
+                      id={order.id}
+                      towerNum={order.towerNum}
+                      apto={order.apto}
+                      customer={order.customer}
+                      phoneNum={order.phoneNum}
+                      payMethod={order.payMethod}
+                      lunch={order.lunch}
+                      time={order.time}
+                      date={order.date}
+                      orderState={order.orderState}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }

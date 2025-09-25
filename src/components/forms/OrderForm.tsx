@@ -7,7 +7,23 @@ import { useLunchStore } from "../../store/useLunchStore";
 import type { LunchType, PayMethod } from "../../types";
 
 export default function OrderForm() {
-  const { draft, isEditing, setDraftTowerNum, setDraftApto, setDraftCustomer, setDraftPhoneNum, setDraftPayMethod, setDraftLunch, setDraftDetails, setDraftTime, setDraftDate, setDraftOrderState, addOrderFromDraft, updateOrderFromOrders, toggleOrderForm } = useOrderStore();
+  const {
+    draft,
+    isEditing,
+    setDraftTowerNum,
+    setDraftApto,
+    setDraftCustomer,
+    setDraftPhoneNum,
+    setDraftPayMethod,
+    setDraftLunch,
+    setDraftDetails,
+    setDraftTime,
+    setDraftDate,
+    setDraftOrderState,
+    addOrderFromDraft,
+    updateOrderFromOrders,
+    toggleOrderForm,
+  } = useOrderStore();
   const { lunches } = useLunchStore();
 
   const [useCurrentDateTime, setUseCurrentDateTime] = useState(false);
@@ -19,71 +35,95 @@ export default function OrderForm() {
 
   useEffect(() => {
     if (useCurrentDateTime) {
-      const now = new Date();
-      setDraftTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      setDraftDate(now);
+      const now = new Date()
+      setDraftTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
+      setDraftDate(now)
     }
-  }, [useCurrentDateTime, setDraftTime, setDraftDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [useCurrentDateTime])
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     switch (name) {
       case "towerNum":
-        setDraftTowerNum(value);
+        setDraftTowerNum(value)
         break;
       case "apto":
-        setDraftApto(Number(value));
+        setDraftApto(Number(value))
         break;
       case "customer":
-        setDraftCustomer(value);
+        setDraftCustomer(value)
         break;
       case "phoneNum":
-        setDraftPhoneNum(Number(value));
+        setDraftPhoneNum(Number(value))
         break;
       case "payMethod":
-        const selectedPayMethod = payMethods.find(p => p.id === value);
+        const selectedPayMethod = payMethods.find((p) => p.id === value)
         if (selectedPayMethod) {
-          setDraftPayMethod(selectedPayMethod);
+          setDraftPayMethod(selectedPayMethod)
         }
         break;
       case "details":
-        setDraftDetails(value);
+        setDraftDetails(value)
         break;
       case "orderState":
-        setDraftOrderState(value as 'pendiente' | 'pagado');
+        setDraftOrderState(value as "pendiente" | "pagado")
         break;
     }
-  };
+  }
 
   const handleLunchChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const selectedLunches = Array.from(e.target.selectedOptions, option => {
-      const lunch = lunches.find(l => l.id === option.value);
-      return lunch ? lunch : null;
-    }).filter((lunch): lunch is LunchType => lunch !== null);
-    setDraftLunch(selectedLunches);
-  };
+    const selectedLunches = Array.from(e.target.selectedOptions, (option) => {
+      const lunch = lunches.find((l) => l.id === option.value)
+      return lunch ? lunch : null
+    }).filter((lunch): lunch is LunchType => lunch !== null)
+    setDraftLunch(selectedLunches)
+  }
 
   const handleTimeChange = (time: Date | null) => {
     if (time) {
-      setDraftTime(time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setDraftTime(time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
     }
-  };
+  }
 
   const handleDateChange = (date: Date | null) => {
     if (date) {
-      setDraftDate(date);
+      setDraftDate(date)
     }
-  };
+  }
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (isEditing) {
-      updateOrderFromOrders();
+      updateOrderFromOrders()
     } else {
-      addOrderFromDraft();
+      addOrderFromDraft()
     }
-    toggleOrderForm();
-  };
+    toggleOrderForm()
+  }
+
+  // helper para DatePicker.selected (aceptar string | Date | undefined)
+  const dateSelected = (() => {
+    if (!draft.date) return null
+    if (draft.date instanceof Date) return isNaN(draft.date.getTime()) ? null : draft.date
+    // si es string, intentar parsear
+    try {
+      const parsed = new Date(draft.date)
+      return isNaN(parsed.getTime()) ? null : parsed
+    } catch {
+      return null
+    }
+  })()
+
+  const timeSelected = (() => {
+    if (!draft.time) return null
+    try {
+      const d = new Date(`1970-01-01T${draft.time}`)
+      return isNaN(d.getTime()) ? null : d
+    } catch {
+      return null
+    }
+  })()
 
   return (
     <div className="p-4">
@@ -105,36 +145,40 @@ export default function OrderForm() {
 
         <div className="flex flex-col space-y-2">
           <label htmlFor="customer">Cliente</label>
-          <input type="text" id="customer" name="customer" value={draft.customer} onChange={handleInputChange} className="border p-2 rounded" />
+          <input type="text" id="customer" name="customer" value={draft.customer ?? ""} onChange={handleInputChange} className="border p-2 rounded" />
         </div>
 
         <div className="flex flex-col space-y-2">
           <label htmlFor="phoneNum">Teléfono</label>
-          <input type="number" id="phoneNum" name="phoneNum" value={draft.phoneNum} onChange={handleInputChange} className="border p-2 rounded" />
+          <input type="number" id="phoneNum" name="phoneNum" value={draft.phoneNum ?? ""} onChange={handleInputChange} className="border p-2 rounded" />
         </div>
 
         <div className="flex flex-col space-y-2">
           <label htmlFor="payMethod">Método de Pago</label>
-          <select id="payMethod" name="payMethod" value={draft.payMethod.id} onChange={handleInputChange} className="border p-2 rounded">
+          <select id="payMethod" name="payMethod" value={draft.payMethod?.id ?? ""} onChange={handleInputChange} className="border p-2 rounded">
             <option value="">-- Seleccione --</option>
-            {payMethods.map(method => (
-              <option key={method.id} value={method.id}>{method.label}</option>
+            {payMethods.map((method) => (
+              <option key={method.id} value={method.id}>
+                {method.label}
+              </option>
             ))}
           </select>
         </div>
 
         <div className="flex flex-col space-y-2">
           <label htmlFor="lunch">Almuerzos</label>
-          <select id="lunch" name="lunch" multiple value={draft.lunch.map(l => l.id)} onChange={handleLunchChange} className="border p-2 rounded h-32">
-            {lunches.map(lunch => (
-              <option key={lunch.id} value={lunch.id}>{lunch.title}</option>
+          <select id="lunch" name="lunch" multiple value={draft.lunch?.map((l) => l.id) ?? []} onChange={handleLunchChange} className="border p-2 rounded h-32">
+            {lunches.map((lunch) => (
+              <option key={lunch.id} value={lunch.id}>
+                {lunch.title}
+              </option>
             ))}
           </select>
         </div>
 
         <div className="flex flex-col space-y-2">
           <label htmlFor="details">Detalles</label>
-          <textarea id="details" name="details" value={draft.details} onChange={handleInputChange} className="border p-2 rounded"></textarea>
+          <textarea id="details" name="details" value={draft.details ?? ""} onChange={handleInputChange} className="border p-2 rounded"></textarea>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -147,7 +191,7 @@ export default function OrderForm() {
             <label htmlFor="time">Hora</label>
             <DatePicker
               id="time"
-              selected={draft.time ? new Date(`1970-01-01T${draft.time}`) : null}
+              selected={timeSelected}
               onChange={handleTimeChange}
               showTimeSelect
               showTimeSelectOnly
@@ -162,7 +206,7 @@ export default function OrderForm() {
             <label htmlFor="date">Fecha</label>
             <DatePicker
               id="date"
-              selected={draft.date}
+              selected={dateSelected}
               onChange={handleDateChange}
               dateFormat="MMMM d, yyyy"
               className="border p-2 rounded w-full"
@@ -173,7 +217,7 @@ export default function OrderForm() {
 
         <div className="flex flex-col space-y-2">
           <label htmlFor="orderState">Estado del Pedido</label>
-          <select id="orderState" name="orderState" value={draft.orderState} onChange={handleInputChange} className="border p-2 rounded">
+          <select id="orderState" name="orderState" value={draft.orderState ?? "pendiente"} onChange={handleInputChange} className="border p-2 rounded">
             <option value="pendiente">Pendiente</option>
             <option value="pagado">Pagado</option>
           </select>

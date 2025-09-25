@@ -3,6 +3,35 @@ import type { OrderType } from "../types"
 import { createJSONStorage, persist } from "zustand/middleware";
 import { apiService } from "../services/api";
 
+const normalizeOrder = (o: Partial<OrderType> & { id?: string }): OrderType => {
+  const dateRaw = (o as any).date;
+  let dateValue: Date | undefined = undefined;
+
+  if (dateRaw !== undefined && dateRaw !== null && dateRaw !== "") {
+    if (dateRaw instanceof Date) {
+      dateValue = !isNaN(dateRaw.getTime()) ? dateRaw : undefined;
+    } else if (typeof dateRaw === "string") {
+      const parsed = new Date(dateRaw);
+      dateValue = !isNaN(parsed.getTime()) ? parsed : undefined;
+    }
+  }
+
+  return {
+    id: o.id ?? (o as any).id ?? "",
+    towerNum: (o.towerNum as string) ?? "",
+    apto: (o.apto as number) ?? 0,
+    customer: (o.customer as string) ?? "",
+    phoneNum: (o.phoneNum as number) ?? 0,
+    payMethod: (o.payMethod as any) ?? { id: "", label: "", image: "" },
+    lunch: (o.lunch as any) ?? [],
+    details: (o.details as string) ?? "",
+    time: (o.time as string) ?? "",
+    date: dateValue,
+    orderState: (o.orderState as OrderType["orderState"]) ?? "pendiente",
+  };
+};
+
+
 export type OrderStoreState = {
   // Lista global de pedidos
   orders: OrderType[];
@@ -38,7 +67,8 @@ export type OrderStoreState = {
   toggleOrderForm: () => void;
   addOrderFromDraft: () => Promise<void>;
   updateOrderFromOrders: () => Promise<void>;
-  deleteLunchById: (id: string) => Promise<void>;
+  deleteOrderById: (id: string) => Promise<void>;
+  updateOrderStateById: (id: string, newState: OrderType["orderState"]) => Promise<void>;
   loadOrderToDraft: (order: OrderType) => void;
   setEditingMode: (editing: boolean) => void;
   loadOrders: () => Promise<void>;
@@ -117,23 +147,24 @@ export const useOrderStore = create<OrderStoreState>()(
 
       // cargar pedidos desde el backend
       loadOrders: async () => {
-        set({ loading: true, error: null })
+        set({ loading: true, error: null });
         try {
-          const orders = await apiService.getOrders()
-          set({ orders, loading: false})
+          const ordersFromApi = await apiService.getOrders();
+          const normalized = ordersFromApi.map((o) => normalizeOrder(o));
+          set({ orders: normalized, loading: false });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Error al cargar Pedidos'
-          set({ error: errorMessage, loading: false })
+          const errorMessage = error instanceof Error ? error.message : "Error al cargar Pedidos";
+          set({ error: errorMessage, loading: false });
         }
       },
 
       // añadir un nuevo pedido desde el draft actual al estado global y backend
       addOrderFromDraft: async () => {
-        const { draft } = get()
-        set({ loading: true, error: null })
+        const { draft } = get();
+        set({ loading: true, error: null });
 
         try {
-          const newOrder: Omit<OrderType, 'id'> = {
+          const newOrder: Omit<OrderType, "id"> = {
             towerNum: draft.towerNum,
             apto: draft.apto,
             customer: draft.customer,
@@ -144,28 +175,30 @@ export const useOrderStore = create<OrderStoreState>()(
             time: draft.time,
             date: draft.date,
             orderState: draft.orderState,
-          }
+          };
 
-          const response = await apiService.createOrder(newOrder)
-          const { orders } = get()
+          const response = await apiService.createOrder(newOrder);
+          // backend devuelve response.order
+          const saved = normalizeOrder(response.order);
+          const { orders } = get();
           set({
-            orders: [response.order, ...orders],
+            orders: [saved, ...orders],
             draft: initialDraft,
             isEditing: false,
-            loading: false
-          })
+            loading: false,
+          });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Error al crear un pedido'
-          set({ error: errorMessage, loading: false })
+          const errorMessage = error instanceof Error ? error.message : "Error al crear un pedido";
+          set({ error: errorMessage, loading: false });
         }
       },
 
       // actualizar un pedido de la lista del estado global seleccionado por id y backend
       updateOrderFromOrders: async () => {
-        const { draft } = get()
-        if (!draft.id) return 
+        const { draft } = get();
+        if (!draft.id) return;
 
-        set({ loading: true, error: null })
+        set({ loading: true, error: null });
 
         try {
           const updateData: Partial<OrderType> = {
@@ -179,41 +212,62 @@ export const useOrderStore = create<OrderStoreState>()(
             time: draft.time,
             date: draft.date,
             orderState: draft.orderState,
-          }
+          };
 
-          const response = await apiService.updateOrder(draft.id, updateData)
-          const { orders } = get()
-          const updatedOrders = orders.map((order) =>
-            order.id === draft.id ? response.updated : order
-          )
+          const response = await apiService.updateOrder(draft.id, updateData);
+          // backend debería devolver { ok: true, updated: OrderType }
+          const updatedNormalized = normalizeOrder(response.updated);
+
+          const { orders } = get();
+          const updatedOrders = orders.map((order) => (order.id === draft.id ? updatedNormalized : order));
           set({
             orders: updatedOrders,
             draft: initialDraft,
             isEditing: false,
-            loading: false
-          })
+            loading: false,
+          });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Error al actualizar pedido'
-          set({ error: errorMessage, loading: false})
+          const errorMessage = error instanceof Error ? error.message : "Error al actualizar pedido";
+          set({ error: errorMessage, loading: false });
         }
       },
 
       // eliminar un pedido del estado global y backend
-      deleteLunchById: async (id) => {
-        set({ loading: true, error: null })
-
+      deleteOrderById: async (id: string) => {
+        set({ loading: true, error: null });
         try {
-          await apiService.deleteOrder(id)
-          const { orders } = get()
+          await apiService.deleteOrder(id);
+          const { orders } = get();
           set({
             orders: orders.filter((order) => order.id !== id),
-            loading: false
-          })
+            loading: false,
+          });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Error al eliminar pedido'
-          set({ error: errorMessage, loading: false })
+          const errorMessage = error instanceof Error ? error.message : "Error al eliminar pedido";
+          set({ error: errorMessage, loading: false });
         }
-      }
+      },
+
+      // actualizar solo orderState por id
+      updateOrderStateById: async (id: string, newState: OrderType["orderState"]) => {
+        set({ loading: true, error: null });
+        try {
+          // Llamada al backend para cambiar estado
+          const response = await apiService.updateOrder(id, { orderState: newState });
+          // backend debe devolver response.updated
+          const updatedNormalized = normalizeOrder(response.updated);
+          const { orders } = get();
+          const updatedOrders = orders.map((o) => (o.id === id ? updatedNormalized : o));
+          set({
+            orders: updatedOrders,
+            loading: false,
+          });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Error al actualizar estado del pedido";
+          set({ error: errorMessage, loading: false });
+        }
+      },
+
     }),
     {
       // clave en AsyncStorage
