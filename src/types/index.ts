@@ -23,12 +23,12 @@ export type OrderType = {
   id: string;
   towerNum: string;
   apto: number;
-  customer: string;
+  customer?: string;
   phoneNum: number;
   payMethod: PayMethod;
   lunch: LunchType[];
-  details: string;
-  time: string;
-  date: Date;
+  details?: string;
+  time?: string;
+  date?: string | Date;
   orderState: OrderState;
 }

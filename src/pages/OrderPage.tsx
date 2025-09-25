@@ -3,6 +3,7 @@ import { useOrderStore } from "../store/useOrderStore"
 import { FaPlus } from "react-icons/fa6"
 import OrderForm from "../components/forms/OrderForm"
 import ViewOrder from "../components/custom/ViewOrder"
+import OrderCard from "../components/cards/OrderCard"
 
 export default function OrderPage() {
 
@@ -52,16 +53,36 @@ export default function OrderPage() {
           {orders.length === 0 ? (
             <p className="text-gray-500 text-center">No hay registro de pedidos aun.</p>
           ) : (
-            <ul className="space-y-2">
-              {orders.map(order => (
-                <li key={order.id} className="p-2 border rounded shadow-sm">
-                  <p><strong>Cliente:</strong> {order.customer}</p>
-                  <p><strong>Torre:</strong> {order.towerNum} <strong>Apto:</strong> {order.apto}</p>
-                  <p><strong>Almuerzos:</strong> {order.lunch.map(l => l.title).join(', ')}</p>
-                  <p><strong>Estado:</strong> <span className={`${order.orderState === 'pagado' ? 'text-green-600' : 'text-red-600'}`}>{order.orderState}</span></p>
-                </li>
-              ))}
-            </ul>
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr>
+                  <th>Torre</th>
+                  <th>Apartamento</th>
+                  <th>Vecino</th>
+                  <th>Teléfono</th>
+                  <th>Método de pago</th>
+                  <th>Almuerzo</th>
+                  <th>Hora y fecha</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map(order => (
+                  <OrderCard 
+                    id={order.id}
+                    towerNum={order.towerNum}
+                    apto={order.apto}
+                    customer={order.customer}
+                    phoneNum={order.phoneNum}
+                    payMethod={order.payMethod}
+                    lunch={order.lunch}
+                    time={order.time}
+                    date={order.date}
+                    orderState={order.orderState}
+                  />
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </div>
