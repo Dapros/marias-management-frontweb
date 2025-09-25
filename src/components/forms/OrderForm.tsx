@@ -158,28 +158,64 @@ export default function OrderForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col space-y-2">
-            <label htmlFor="towerNum">Torre</label>
-            <input type="text" id="towerNum" name="towerNum" value={draft.towerNum} onChange={handleInputChange} className="border p-2 rounded" />
+            <label htmlFor="towerNum" className="text-lg">Torre</label>
+            <input 
+              type="text" 
+              id="towerNum" 
+              name="towerNum"
+              value={draft.towerNum} 
+              onChange={handleInputChange}
+              placeholder="Numero de la torre, pj. 4"
+              className="outline-none border placeholder:opacity-50 py-1 px-2 rounded-lg border-gray-500 focus:border-teal-600 focus:placeholder:text-teal-600 transition-normal ease-in-out duration-300" 
+            />
           </div>
           <div className="flex flex-col space-y-2">
-            <label htmlFor="apto">Apto</label>
-            <input type="number" id="apto" name="apto" value={draft.apto ?? ""} onChange={handleInputChange} className="border p-2 rounded" />
+            <label htmlFor="apto" className="text-lg">Apto</label>
+            <input 
+              type="number" 
+              id="apto" 
+              name="apto" 
+              value={draft.apto ?? ""} 
+              onChange={handleInputChange} 
+              className="outline-none border placeholder:opacity-50 py-1 px-2 rounded-lg border-gray-500 focus:border-teal-600 focus:placeholder:text-teal-600 transition-normal ease-in-out duration-300" 
+            />
           </div>
         </div>
 
         <div className="flex flex-col space-y-2">
-          <label htmlFor="customer">Cliente</label>
-          <input type="text" id="customer" name="customer" value={draft.customer ?? ""} onChange={handleInputChange} className="border p-2 rounded" />
+          <label htmlFor="customer" className="text-lg">Cliente</label>
+          <input 
+            type="text" 
+            id="customer" 
+            name="customer" 
+            value={draft.customer ?? ""} 
+            onChange={handleInputChange} 
+            placeholder="Nombre del cliente. pe. Vecino Juan."
+            className="outline-none border placeholder:opacity-50 py-1 px-2 rounded-lg border-gray-500 focus:border-teal-600 focus:placeholder:text-teal-600 transition-normal ease-in-out duration-300"
+          />
         </div>
 
         <div className="flex flex-col space-y-2">
-          <label htmlFor="phoneNum">Teléfono</label>
-          <input type="number" id="phoneNum" name="phoneNum" value={draft.phoneNum ?? ""} onChange={handleInputChange} className="border p-2 rounded" />
+          <label htmlFor="phoneNum" className="text-lg">Teléfono</label>
+          <input 
+            type="number" 
+            id="phoneNum" 
+            name="phoneNum" 
+            value={draft.phoneNum ?? ""} 
+            onChange={handleInputChange} 
+            className="outline-none border placeholder:opacity-50 py-1 px-2 rounded-lg border-gray-500 focus:border-teal-600 focus:placeholder:text-teal-600 transition-normal ease-in-out duration-300"
+          />
         </div>
 
         <div className="flex flex-col space-y-2">
-          <label htmlFor="payMethod">Método de Pago</label>
-          <select id="payMethod" name="payMethod" value={draft.payMethod?.id ?? ""} onChange={handleInputChange} className="border p-2 rounded">
+          <label htmlFor="payMethod" className="text-lg">Método de Pago</label>
+          <select 
+            id="payMethod" 
+            name="payMethod" 
+            value={draft.payMethod?.id ?? ""} 
+            onChange={handleInputChange} 
+            className="outline-none border placeholder:opacity-50 py-1 px-2 rounded-lg border-gray-500 focus:border-teal-600 focus:placeholder:text-teal-600 transition-normal ease-in-out duration-300"
+          >
             <option value="">-- Seleccione --</option>
             {payMethods.map((method) => (
               <option key={method.id} value={method.id}>{method.label}</option>
@@ -189,14 +225,14 @@ export default function OrderForm() {
 
         {/* --- Selección de almuerzos (agrega con quantity) --- */}
         <div className="flex flex-col space-y-2">
-          <label>Almuerzos</label>
+          <label className="text-lg">Almuerzos</label>
           <select onChange={(e) => {
             const id = e.target.value;
             if (!id) return;
             const found = lunches.find(l => l.id === id);
             if (found) addLunchToDraft(found);
             e.currentTarget.value = "";
-          }} className="border p-2 rounded">
+          }} className="outline-none border placeholder:opacity-50 py-1 px-2 rounded-lg border-gray-500 focus:border-teal-600 focus:placeholder:text-teal-600 transition-normal ease-in-out duration-300">
             <option value="">-- Selecciona para agregar --</option>
             {lunches.map(l => <option key={l.id} value={l.id}>{l.title} — {l.price}</option>)}
           </select>
@@ -205,16 +241,16 @@ export default function OrderForm() {
           {draft.lunch && draft.lunch.length > 0 && (
             <div className="mt-2 space-y-2">
               {draft.lunch.map((l) => (
-                <div key={l.id} className="flex items-center justify-between gap-2 border p-2 rounded">
+                <div key={l.id} className="flex items-center justify-between gap-2 border p-2 rounded-lg border-gray-500 hover:border-teal-600 transition-normal ease-in-out duration-300">
                   <div>
                     <div className="font-medium">{l.title}</div>
-                    <div className="text-sm text-gray-600">Unit: {l.price}</div>
+                    <div className="text-sm text-gray-600">precio: {l.price}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setQuantityForLunch(l.id, (l.quantity ?? 1) - 1)} className="px-2 py-1 border rounded">-</button>
-                    <input type="number" value={l.quantity ?? 1} min={1} onChange={(e) => setQuantityForLunch(l.id, Number(e.target.value) || 1)} className="w-16 text-center border rounded px-1 py-1" />
-                    <button type="button" onClick={() => setQuantityForLunch(l.id, (l.quantity ?? 1) + 1)} className="px-2 py-1 border rounded">+</button>
-                    <button type="button" onClick={() => removeLunchFromDraft(l.id)} className="px-2 py-1 text-red-600 border rounded ml-2">Eliminar</button>
+                    <button type="button" onClick={() => setQuantityForLunch(l.id, (l.quantity ?? 1) - 1)} className="px-2 py-1 border rounded-lg hover:shadow">-</button>
+                    <input type="number" value={l.quantity ?? 1} min={1} onChange={(e) => setQuantityForLunch(l.id, Number(e.target.value) || 1)} className="w-16 outline-none text-center border rounded-lg p-1" />
+                    <button type="button" onClick={() => setQuantityForLunch(l.id, (l.quantity ?? 1) + 1)} className="px-2 py-1 border rounded-lg hover:shadow">+</button>
+                    <button type="button" onClick={() => removeLunchFromDraft(l.id)} className="px-2 py-1 bg-red-50 hover:shadow text-red-600 border rounded-lg ml-2">Eliminar</button>
                   </div>
                 </div>
               ))}
@@ -225,29 +261,62 @@ export default function OrderForm() {
         </div>
 
         <div className="flex flex-col space-y-2">
-          <label htmlFor="details">Detalles</label>
-          <textarea id="details" name="details" value={draft.details ?? ""} onChange={handleInputChange} className="border p-2 rounded"></textarea>
+          <label htmlFor="details" className="text-lg">Detalles</label>
+          <textarea 
+            id="details" 
+            name="details" 
+            value={draft.details ?? ""} 
+            onChange={handleInputChange} 
+            placeholder="Detalles que el cliente haya mencionado. pj. Sin Arroz, con más sopa... etc."
+            className="outline-none border placeholder:opacity-50 py-1 px-2 rounded-lg border-gray-500 focus:border-teal-600 focus:placeholder:text-teal-600 min-h-20 max-h-80"
+          ></textarea>
         </div>
 
         <div className="flex items-center space-x-2">
-          <input type="checkbox" id="useCurrentDateTime" checked={useCurrentDateTime} onChange={() => setUseCurrentDateTime(!useCurrentDateTime)} />
-          <label htmlFor="useCurrentDateTime">Usar hora y fecha actual</label>
+          <input 
+            type="checkbox" 
+            id="useCurrentDateTime" 
+            checked={useCurrentDateTime} 
+            onChange={() => setUseCurrentDateTime(!useCurrentDateTime)} 
+            className=" h-4 w-4 hover:cursor-pointer"
+          />
+          <label htmlFor="useCurrentDateTime" className="text-lg">Usar hora y fecha actual</label>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col space-y-2">
-            <label htmlFor="time">Hora</label>
-            <DatePicker id="time" selected={timeSelected} onChange={handleTimeChange} showTimeSelect showTimeSelectOnly timeIntervals={15} timeCaption="Time" dateFormat="h:mm aa" className="border p-2 rounded w-full" disabled={useCurrentDateTime} />
+            <label htmlFor="time" className="text-lg">Hora</label>
+            <DatePicker 
+              id="time" 
+              selected={timeSelected} 
+              onChange={handleTimeChange} 
+              showTimeSelect showTimeSelectOnly timeIntervals={15} timeCaption="Time" dateFormat="h:mm aa" 
+              className="w-full outline-none border placeholder:opacity-50 py-1 px-2 rounded-lg border-gray-500 focus:border-teal-600 focus:placeholder:text-teal-600"
+              disabled={useCurrentDateTime} 
+            />
           </div>
           <div className="flex flex-col space-y-2">
-            <label htmlFor="date">Fecha</label>
-            <DatePicker id="date" selected={dateSelected} onChange={handleDateChange} dateFormat="MMMM d, yyyy" className="border p-2 rounded w-full" disabled={useCurrentDateTime} />
+            <label htmlFor="date" className="text-lg">Fecha</label>
+            <DatePicker 
+              id="date" 
+              selected={dateSelected} 
+              onChange={handleDateChange} 
+              dateFormat="MMMM d, yyyy" 
+              className="w-full outline-none border placeholder:opacity-50 py-1 px-2 rounded-lg border-gray-500 focus:border-teal-600 focus:placeholder:text-teal-600"
+              disabled={useCurrentDateTime} 
+            />
           </div>
         </div>
 
         <div className="flex flex-col space-y-2">
-          <label htmlFor="orderState">Estado del Pedido</label>
-          <select id="orderState" name="orderState" value={draft.orderState ?? "pendiente"} onChange={handleInputChange} className="border p-2 rounded">
+          <label htmlFor="orderState" className="text-lg">Estado del Pedido</label>
+          <select 
+            id="orderState" 
+            name="orderState" 
+            value={draft.orderState ?? "pendiente"} 
+            onChange={handleInputChange} 
+            className="outline-none border placeholder:opacity-50 py-1 px-2 rounded-lg border-gray-500 focus:border-teal-600 focus:placeholder:text-teal-600 transition-normal ease-in-out duration-300"
+          >
             <option value="pendiente">Pendiente</option>
             <option value="pagado">Pagado</option>
           </select>

@@ -61,7 +61,7 @@ export default function ViewOrder() {
 
   return (
     <div className="p-4 bg-gray-50">
-      <h3 className="text-lg font-semibold text-gray-700 mb-4">Vista previa del pedido</h3>
+      <h3 className="text-lg font-semibold text-gray-700 mb-16">Vista previa del pedido</h3>
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         {/* Header tipo factura */}
