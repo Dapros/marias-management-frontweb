@@ -3,6 +3,7 @@ import type { OrderType } from "../types"
 import { createJSONStorage, persist } from "zustand/middleware";
 import { apiService } from "../services/api";
 import { computeTotal } from "../utils/computeTotal";
+import { isSameDay, isSameWeek, isSameMonth } from "../utils/date";
 
 const normalizeOrder = (o: Partial<OrderType> & { id?: string }): OrderType => {
   // date handling (como antes)...
@@ -58,6 +59,11 @@ export type OrderStoreState = {
   // Borrador del formulario de pedidos para vista previa
   draft: Omit<OrderType, "id"> & { id?: string };
 
+  // filtros 
+  statusFilter: 'all' | 'pendiente' | 'pagado';
+  dateFilterType: 'all' | 'today' | 'week' | 'month' | 'date';
+  dateFilterDate?: Date | null;
+
   // Acciones
   setDraftTowerNum: (towerNum: OrderType["towerNum"]) => void;
   setDraftApto: (apto: OrderType["apto"]) => void;
@@ -80,6 +86,15 @@ export type OrderStoreState = {
   setEditingMode: (editing: boolean) => void;
   loadOrders: () => Promise<void>;
   setError: (error: string | null) => void;
+
+  // Acciones de filtro
+  setStatusFilter: (s: 'all' | 'pendiente' | 'pagado') => void;
+  setDateFilterType: (t: 'all' | 'today' | 'week' | 'month' | 'date') => void;
+  setDateFilterDate: (d?: Date | null) => void;
+  clearFilters: () => void;
+
+  // función derivada
+  filteredOrders: () => OrderType[];
 }
 
 const initialDraft: OrderStoreState["draft"] = {
@@ -125,6 +140,10 @@ export const useOrderStore = create<OrderStoreState>()(
       loading: false,
       error: null,
       draft: initialDraft,
+      statusFilter: 'all',
+      dateFilterType: 'all',
+      dateFilterDate: undefined,
+
 
       setDraftTowerNum: (towerNum) => set((state) => ({ draft: { ...state.draft, towerNum}})),
       setDraftApto: (apto) => set((state) => ({ draft: { ...state.draft, apto}})),
@@ -139,6 +158,39 @@ export const useOrderStore = create<OrderStoreState>()(
 
       resetDraft: () => set(() => ({ draft: initialDraft, isEditing: false})),
       toggleOrderForm: () => set((state) => ({ showOrderForm: !state.showOrderForm})),
+
+      // acciones de filtro
+      setStatusFilter: (s) => set(() => ({ statusFilter: s })),
+      setDateFilterType: (t) => set(() => ({ dateFilterType: t })),
+      setDateFilterDate: (d) => set(() => ({ dateFilterDate: d })),
+      clearFilters: () => set(() => ({ statusFilter: 'all', dateFilterType: 'all', dateFilterDate: undefined })),
+
+      filteredOrders: () => {
+        const state = get();
+        const { orders, statusFilter, dateFilterType, dateFilterDate } = state;
+        const matchesDate = (o: OrderType) => {
+          if (dateFilterType === 'all') return true;
+          if (dateFilterType === 'today') {
+            return isSameDay(o.date, new Date());
+          }
+          if (dateFilterType === 'week') {
+            return isSameWeek(o.date, new Date());
+          }
+          if (dateFilterType === 'month') {
+            return isSameMonth(o.date, new Date());
+          }
+          if (dateFilterType === 'date' && dateFilterDate) {
+            return isSameDay(o.date, dateFilterDate);
+          }
+          return true;
+        }
+        const matchesStatus = (o: OrderType) => {
+          if (statusFilter === 'all') return true;
+          return o.orderState === statusFilter;
+        }
+        return orders.filter(o => matchesStatus(o) && matchesDate(o));
+      },
+
 
       // cargar un pedido existente al draft para edicion
       loadOrderToDraft: (order) => set(() => ({
