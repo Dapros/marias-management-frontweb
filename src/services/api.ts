@@ -1,4 +1,4 @@
-import type { LunchType, OrderType } from '../types'
+import type { ExpenseType, LunchType, OrderType } from '../types'
 
 const API_URL = import.meta.env.VITE_API_BASE_URL
 const API_BASE_URL = `${API_URL}/api`
@@ -97,6 +97,25 @@ class ApiService {
   async deleteOrder(id: string): Promise<{ ok: boolean }> {
     return this.request<{ ok: boolean }>(`/orders/${id}`, {
       method: 'DELETE',
+    })
+  }
+
+  // Expenses endpoints
+  async getExpenses(): Promise<ExpenseType[]> {
+    return this.request<ExpenseType[]>('/expenses')
+  }
+
+  async createExpense(expense: Omit<ExpenseType, 'id'>): Promise<{ ok: boolean; expense: ExpenseType }> {
+    console.log('Creando egreso:', { kind: expense.kind, title: expense.title, amount: expense.amount })
+    return this.request<{ ok: boolean; expense: ExpenseType }>('/expenses', {
+      method: 'POST',
+      body: JSON.stringify(expense)
+    })
+  }
+
+  async deleteExpense(id: string): Promise<{ ok: boolean }> {
+    return this.request<{ ok: boolean }>(`/expenses/${id}`, {
+      method: 'DELETE'
     })
   }
 }
